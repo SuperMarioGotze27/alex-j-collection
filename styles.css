@@ -646,6 +646,90 @@ h2 {
   color: var(--text);
 }
 
+.home-collection-cta {
+  align-items: end;
+  background:
+    linear-gradient(135deg, rgba(13, 13, 12, 0.92), rgba(23, 18, 15, 0.72)),
+    url("assets/media/DRhikp9EXXX-01.jpg") center / cover no-repeat;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  color: #fff;
+  display: grid;
+  gap: 26px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  min-height: 520px;
+  padding: clamp(82px, 13vw, 160px) clamp(18px, 5vw, 76px);
+}
+
+.home-collection-cta > div {
+  max-width: 880px;
+}
+
+.home-collection-cta h2 {
+  max-width: 880px;
+}
+
+.home-collection-cta p:not(.quiet-label) {
+  color: var(--ink-soft);
+  font-size: clamp(1.05rem, 2vw, 1.35rem);
+  line-height: 1.45;
+  margin: 24px 0 0;
+  max-width: 600px;
+}
+
+.collection-page {
+  background: #f7f2e9;
+  color: var(--text);
+}
+
+.collection-hero {
+  align-items: end;
+  background:
+    radial-gradient(circle at 8% 22%, rgba(132, 17, 39, 0.22), transparent 28rem),
+    linear-gradient(135deg, #f4efe5 0%, #e9dfd0 100%);
+  color: var(--text);
+  display: grid;
+  gap: clamp(28px, 5vw, 72px);
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 420px);
+  min-height: 640px;
+  padding: clamp(124px, 15vw, 190px) clamp(18px, 5vw, 76px) clamp(58px, 9vw, 110px);
+}
+
+.collection-hero h1 {
+  color: var(--text);
+  font-size: clamp(3.4rem, 8vw, 8rem);
+  font-weight: 900;
+  letter-spacing: 0;
+  line-height: 0.86;
+  margin: 0;
+  max-width: 960px;
+}
+
+.collection-hero p:not(.quiet-label) {
+  color: var(--muted);
+  font-size: clamp(1.05rem, 2vw, 1.36rem);
+  line-height: 1.45;
+  margin: 28px 0 0;
+  max-width: 680px;
+}
+
+.collection-hero-image {
+  aspect-ratio: 4 / 5;
+  border: 1px solid rgba(23, 21, 20, 0.16);
+  border-radius: 10px;
+  box-shadow: 0 30px 78px rgba(23, 21, 20, 0.18);
+  overflow: hidden;
+}
+
+.collection-hero-image img {
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+}
+
+.collection-page-section {
+  padding-top: clamp(64px, 9vw, 112px);
+}
+
 .result-count {
   color: var(--muted);
   margin: 0;
@@ -722,7 +806,11 @@ h2 {
   max-width: 1320px;
   overflow-x: auto;
   padding-bottom: 8px;
-  scrollbar-width: thin;
+  scrollbar-width: none;
+}
+
+.filter-rail::-webkit-scrollbar {
+  display: none;
 }
 
 .filter-chip {
@@ -1012,6 +1100,43 @@ h2 {
   white-space: pre-line;
 }
 
+.music-control {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(23, 21, 20, 0.16);
+  border-radius: 999px;
+  bottom: 18px;
+  box-shadow: 0 16px 46px rgba(0, 0, 0, 0.22);
+  color: var(--text);
+  cursor: pointer;
+  display: inline-flex;
+  font-weight: 900;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 14px;
+  position: fixed;
+  right: 18px;
+  z-index: 18;
+  backdrop-filter: blur(18px);
+}
+
+.music-control.is-playing {
+  background: var(--red);
+  border-color: var(--red);
+  color: #fff;
+}
+
+.music-control.is-blocked {
+  border-color: rgba(132, 17, 39, 0.32);
+  color: var(--red);
+}
+
+.music-control.is-missing {
+  color: var(--muted);
+  cursor: default;
+  opacity: 0.72;
+}
+
 .empty-state {
   align-items: center;
   border: 1px dashed var(--line-dark);
@@ -1137,6 +1262,19 @@ h2 {
     grid-template-columns: 1fr;
   }
 
+  .home-collection-cta,
+  .collection-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .collection-hero {
+    min-height: auto;
+  }
+
+  .collection-hero-image {
+    max-width: 420px;
+  }
+
   .dialog-gallery {
     min-height: 54vh;
   }
@@ -1209,9 +1347,28 @@ h2 {
 
   .featured-section,
   .accordion-section,
-  .collection-section {
+  .collection-section,
+  .home-collection-cta {
     padding-left: 14px;
     padding-right: 14px;
+  }
+
+  .collection-hero {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .collection-hero h1 {
+    font-size: 3.7rem;
+  }
+
+  .home-collection-cta {
+    align-items: start;
+    min-height: 440px;
+  }
+
+  .home-collection-cta .primary-action.dark {
+    width: 100%;
   }
 
   .section-heading,
@@ -1249,5 +1406,11 @@ h2 {
 
   .dialog-gallery {
     min-height: 48vh;
+  }
+
+  .music-control {
+    bottom: 12px;
+    min-height: 40px;
+    right: 12px;
   }
 }

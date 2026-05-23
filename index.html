@@ -26,7 +26,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=20260523b">
+    <link rel="stylesheet" href="styles.css?v=20260523e">
   </head>
   <body>
     <header class="site-header" aria-label="Site navigation">
@@ -35,7 +35,8 @@
         <span>Alex J Collection</span>
       </a>
       <nav class="header-actions" aria-label="Primary">
-        <a href="#collection">Collection</a>
+        <a href="#featured">Featured</a>
+        <a href="collection.html">Collection</a>
         <a class="source-link" href="https://www.instagram.com/alexjcollection/" target="_blank" rel="noreferrer">
           <i data-lucide="instagram" aria-hidden="true"></i>
           <span class="source-label">Instagram</span>
@@ -55,9 +56,9 @@
           </h1>
           <p class="hero-lede">A cinematic archive of signed shirts, match-worn pieces, and football memories collected through cities, stadium gates, and chance meetings.</p>
           <div class="hero-actions" aria-label="Hero actions">
-            <a class="primary-action" href="#collection">
+            <a class="primary-action" href="collection.html">
               <i data-lucide="layout-grid" aria-hidden="true"></i>
-              Browse Shirts
+              View Collection
             </a>
             <a class="secondary-action" href="#featured">
               <i data-lucide="sparkles" aria-hidden="true"></i>
@@ -118,29 +119,16 @@
         <div id="accordionPanels" class="accordion-panels"></div>
       </section>
 
-      <section id="collection" class="collection-section" aria-labelledby="collection-title">
-        <div class="collection-heading">
-          <div>
-            <p class="quiet-label">Complete wall</p>
-            <h2 id="collection-title">Every shirt, indexed.</h2>
-          </div>
-          <p id="resultCount" class="result-count"></p>
+      <section id="collection" class="home-collection-cta" aria-labelledby="home-collection-title">
+        <div>
+          <p class="quiet-label">Full archive</p>
+          <h2 id="home-collection-title">The complete wall lives one level deeper.</h2>
+          <p>Open the indexed collection for every shirt, search, filters, and full photo sets.</p>
         </div>
-
-        <div class="toolbar" aria-label="Collection filters">
-          <label class="search-box" for="searchInput">
-            <i data-lucide="search" aria-hidden="true"></i>
-            <input id="searchInput" type="search" autocomplete="off" placeholder="Search player, team, place">
-          </label>
-          <div class="sort-control" aria-label="Sort collection">
-            <button class="sort-button active" type="button" data-sort="newest">Newest</button>
-            <button class="sort-button" type="button" data-sort="player">A-Z</button>
-            <button class="sort-button" type="button" data-sort="photos">Photos</button>
-          </div>
-        </div>
-
-        <div id="filterRail" class="filter-rail" aria-label="Filter by tag"></div>
-        <div id="cardsGrid" class="cards-grid" aria-live="polite"></div>
+        <a class="primary-action dark" href="collection.html">
+          <i data-lucide="arrow-right" aria-hidden="true"></i>
+          Open Collection
+        </a>
       </section>
     </main>
 
@@ -154,6 +142,11 @@
         <p>Optimized for GitHub Pages, mobile browsing, and rich link previews.</p>
       </div>
     </footer>
+
+    <button id="musicToggle" class="music-control" type="button" data-audio-src="assets/audio/glory-glory-tottenham-hotspur-tottenham-fc.mp3" data-autoplay="true" aria-label="Play background music">
+      <i data-lucide="volume-2" aria-hidden="true"></i>
+      <span>BGM</span>
+    </button>
 
     <dialog id="detailDialog" class="detail-dialog" aria-labelledby="dialogTitle">
       <button class="dialog-close" type="button" aria-label="Close detail">
@@ -187,6 +180,6 @@
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
-    <script type="module" src="app.js?v=20260523b"></script>
+    <script type="module" src="app.js?v=20260523e"></script>
   </body>
 </html>

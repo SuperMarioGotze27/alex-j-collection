@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Collection | Alex J Collection</title>
+    <meta name="description" content="Search and browse every football shirt in Alex J Collection.">
+    <meta name="theme-color" content="#111111">
+    <link rel="canonical" href="https://supermariogotze27.github.io/alex-j-collection/collection.html">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://supermariogotze27.github.io/alex-j-collection/collection.html">
+    <meta property="og:site_name" content="Alex J Collection">
+    <meta property="og:title" content="Alex J Collection | Full Shirt Archive">
+    <meta property="og:description" content="The complete indexed archive of signed and match-worn football shirts.">
+    <meta property="og:image" content="https://supermariogotze27.github.io/alex-j-collection/assets/social-preview.jpg">
+    <meta property="og:image:secure_url" content="https://supermariogotze27.github.io/alex-j-collection/assets/social-preview.jpg">
+    <meta property="og:image:type" content="image/jpeg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Alex J Collection football shirt archive preview">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Alex J Collection | Full Shirt Archive">
+    <meta name="twitter:description" content="The complete indexed archive of signed and match-worn football shirts.">
+    <meta name="twitter:image" content="https://supermariogotze27.github.io/alex-j-collection/assets/social-preview.jpg">
+    <meta name="twitter:image:alt" content="Alex J Collection football shirt archive preview">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css?v=20260523e">
+  </head>
+  <body>
+    <header class="site-header is-scrolled" aria-label="Site navigation">
+      <a class="brand" href="index.html" aria-label="Alex J Collection home">
+        <span class="brand-mark">AJ</span>
+        <span>Alex J Collection</span>
+      </a>
+      <nav class="header-actions" aria-label="Primary">
+        <a href="index.html#featured">Featured</a>
+        <a href="#collection">Collection</a>
+        <a class="source-link" href="https://www.instagram.com/alexjcollection/" target="_blank" rel="noreferrer">
+          <i data-lucide="instagram" aria-hidden="true"></i>
+          <span class="source-label">Instagram</span>
+          <span class="source-short">IG</span>
+        </a>
+      </nav>
+    </header>
+
+    <main id="top" class="page-shell collection-page">
+      <section class="collection-hero" aria-labelledby="collection-hero-title">
+        <div>
+          <p class="quiet-label">Complete collection</p>
+          <h1 id="collection-hero-title">Every shirt, indexed.</h1>
+          <p>Search by player, club, place, or type. Open any card for the full photo set and original Instagram post.</p>
+        </div>
+        <div class="collection-hero-image">
+          <img src="assets/media/DGRzXUCRraH-01.jpg" alt="Signed Andriy Shevchenko AC Milan shirt">
+        </div>
+      </section>
+
+      <section id="collection" class="collection-section collection-page-section" aria-labelledby="collection-title">
+        <div class="collection-heading">
+          <div>
+            <p class="quiet-label">Shirt wall</p>
+            <h2 id="collection-title">Browse the archive.</h2>
+          </div>
+          <p id="resultCount" class="result-count"></p>
+        </div>
+
+        <div class="toolbar" aria-label="Collection filters">
+          <label class="search-box" for="searchInput">
+            <i data-lucide="search" aria-hidden="true"></i>
+            <input id="searchInput" type="search" autocomplete="off" placeholder="Search player, team, place">
+          </label>
+          <div class="sort-control" aria-label="Sort collection">
+            <button class="sort-button active" type="button" data-sort="newest">Newest</button>
+            <button class="sort-button" type="button" data-sort="player">A-Z</button>
+            <button class="sort-button" type="button" data-sort="photos">Photos</button>
+          </div>
+        </div>
+
+        <div id="filterRail" class="filter-rail" aria-label="Filter by tag"></div>
+        <div id="cardsGrid" class="cards-grid" aria-live="polite"></div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <p class="quiet-label">Back to features</p>
+        <h2>Return to the front room.</h2>
+      </div>
+      <div class="footer-copy">
+        <p><a href="index.html">Open featured homepage</a></p>
+        <p>Source: public posts from <a href="https://www.instagram.com/alexjcollection/" target="_blank" rel="noreferrer">@alexjcollection</a>.</p>
+      </div>
+    </footer>
+
+    <button id="musicToggle" class="music-control" type="button" data-audio-src="assets/audio/glory-glory-tottenham-hotspur-tottenham-fc.mp3" data-autoplay="true" aria-label="Play background music">
+      <i data-lucide="volume-2" aria-hidden="true"></i>
+      <span>BGM</span>
+    </button>
+
+    <dialog id="detailDialog" class="detail-dialog" aria-labelledby="dialogTitle">
+      <button class="dialog-close" type="button" aria-label="Close detail">
+        <i data-lucide="x" aria-hidden="true"></i>
+      </button>
+      <div class="dialog-layout">
+        <div class="dialog-gallery">
+          <button class="gallery-button previous" type="button" aria-label="Previous image">
+            <i data-lucide="chevron-left" aria-hidden="true"></i>
+          </button>
+          <img id="dialogImage" src="" alt="">
+          <button class="gallery-button next" type="button" aria-label="Next image">
+            <i data-lucide="chevron-right" aria-hidden="true"></i>
+          </button>
+          <div id="thumbRail" class="thumb-rail" aria-label="Image thumbnails"></div>
+        </div>
+        <article class="dialog-copy">
+          <p id="dialogDate" class="quiet-label"></p>
+          <h2 id="dialogTitle"></h2>
+          <p id="dialogMeta" class="dialog-meta"></p>
+          <p id="dialogCaption" class="dialog-caption"></p>
+          <div id="dialogTags" class="tag-list"></div>
+          <a id="dialogLink" class="primary-action dark" href="#" target="_blank" rel="noreferrer">
+            <i data-lucide="external-link" aria-hidden="true"></i>
+            Open Original Post
+          </a>
+        </article>
+      </div>
+    </dialog>
+
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+    <script type="module" src="app.js?v=20260523e"></script>
+  </body>
+</html>

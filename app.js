@@ -8,6 +8,8 @@ const state = {
   activeImage: 0,
 };
 
+let backgroundAudio = null;
+
 const els = {
   statPosts: document.querySelector("#statPosts"),
   statImages: document.querySelector("#statImages"),
@@ -34,6 +36,7 @@ const els = {
   nextImage: document.querySelector(".gallery-button.next"),
   previousImage: document.querySelector(".gallery-button.previous"),
   siteHeader: document.querySelector(".site-header"),
+  musicToggle: document.querySelector("#musicToggle"),
 };
 
 const curatedFilters = [
@@ -96,6 +99,7 @@ async function init() {
     const response = await fetch("data/collection.json");
     const collection = await response.json();
     state.posts = collection.posts.map(enhancePost);
+    applyInitialViewParams();
     state.filtered = [...state.posts];
     renderStats(collection.source);
     renderMarquee();
@@ -106,9 +110,12 @@ async function init() {
     bindEvents();
     updateHeader();
     setupMotion();
+    setupMusic();
     refreshIcons();
   } catch (error) {
-    els.cardsGrid.innerHTML = `<div class="empty-state">Collection data could not be loaded.</div>`;
+    if (els.cardsGrid) {
+      els.cardsGrid.innerHTML = `<div class="empty-state">Collection data could not be loaded.</div>`;
+    }
     console.error(error);
   }
 }
@@ -141,17 +148,19 @@ function enhancePost(post) {
 }
 
 function renderStats(source) {
+  if (!els.statPosts || !els.statImages || !els.statSigned || !els.statClubs) return;
   const mediaTotal = state.posts.reduce((sum, post) => sum + post.media.length, 0);
   const signedTotal = state.posts.filter((post) => hasTag(post, "Signed")).length;
   const teams = new Set(state.posts.flatMap((post) => (post.tags || []).filter(isTeamTag)));
 
-  els.statPosts.textContent = source.postCount || state.posts.length;
+  els.statPosts.textContent = source?.postCount || state.posts.length;
   els.statImages.textContent = mediaTotal;
   els.statSigned.textContent = signedTotal;
   els.statClubs.textContent = teams.size;
 }
 
 function renderMarquee() {
+  if (!els.marqueeTrack) return;
   const selected = state.posts
     .filter((post) => post.media[0]?.src)
     .slice(0, 16);
@@ -165,6 +174,7 @@ function renderMarquee() {
 }
 
 function renderFilters() {
+  if (!els.filterRail) return;
   const available = new Set(["All"]);
   for (const post of state.posts) {
     for (const tag of post.tags || []) available.add(tag);
@@ -173,6 +183,9 @@ function renderFilters() {
   }
 
   const filters = curatedFilters.filter((filter) => available.has(filter));
+  if (!filters.includes(state.filter) && available.has(state.filter)) {
+    filters.push(state.filter);
+  }
   els.filterRail.innerHTML = filters.map((filter) => {
     const active = state.filter === filter ? " active" : "";
     return `<button class="filter-chip${active}" type="button" data-filter="${escapeHtml(filter)}">${escapeHtml(filter)}</button>`;
@@ -180,6 +193,7 @@ function renderFilters() {
 }
 
 function renderFeatured() {
+  if (!els.featuredGrid) return;
   const wanted = ["DGNKPgGOX6g", "DLVu84XSWyF", "DKye5lCuXal", "DKyehMGuHqS", "DGRzXUCRraH", "DHSj6wAu7eC"];
   const featured = wanted
     .map((code) => state.posts.find((post) => post.code === code))
@@ -198,30 +212,31 @@ function renderFeatured() {
 }
 
 function renderAccordions() {
+  if (!els.accordionPanels) return;
   const groups = [
     {
-      title: "Signed icons",
+      title: "Signed shirts",
       filter: "Signed",
       code: "DGNKPgGOX6g",
-      copy: "Autographs, dedication notes, and the exact place the memory happened.",
+      copy: "Autographs, dedication notes, and player moments kept with their original photos.",
     },
     {
       title: "Match worn",
       filter: "Match worn",
       code: "DLVu84XSWyF",
-      copy: "Pieces that carry a fixture, a pitch, and a trace of the match.",
+      copy: "Pieces tied to a fixture, a pitch, and a real match context.",
     },
     {
-      title: "Milan wall",
+      title: "AC Milan",
       filter: "AC Milan",
       code: "DGRzXUCRraH",
       copy: "A red-and-black shelf for Zlatan, Giroud, Rivaldo, Cafu, Tonali, and Shevchenko.",
     },
     {
-      title: "Premier League",
+      title: "Manchester United",
       filter: "Manchester United",
       code: "DOebLzKAZrI",
-      copy: "Names gathered across Manchester, London, Liverpool, and beyond.",
+      copy: "United shirts and signatures gathered across the archive.",
     },
   ];
 
@@ -240,13 +255,16 @@ function renderAccordions() {
 }
 
 function renderCards() {
+  if (!els.cardsGrid) return;
   const query = state.query.trim().toLowerCase();
   state.filtered = state.posts
     .filter((post) => matchesFilter(post, state.filter))
     .filter((post) => !query || post.searchable.includes(query))
     .sort(sortPosts);
 
-  els.resultCount.textContent = `${state.filtered.length} shirts`;
+  if (els.resultCount) {
+    els.resultCount.textContent = `${state.filtered.length} shirts`;
+  }
 
   if (!state.filtered.length) {
     els.cardsGrid.innerHTML = `<div class="empty-state">No shirts match this view.</div>`;
@@ -278,29 +296,33 @@ function renderCards() {
 function bindEvents() {
   window.addEventListener("scroll", updateHeader, { passive: true });
 
-  els.searchInput.addEventListener("input", (event) => {
-    state.query = event.target.value;
-    renderCards();
-  });
+  if (els.searchInput) {
+    els.searchInput.value = state.query;
+    els.searchInput.addEventListener("input", (event) => {
+      state.query = event.target.value;
+      renderCards();
+      syncCollectionUrl();
+    });
+  }
 
-  els.filterRail.addEventListener("click", (event) => {
-    const chip = event.target.closest("[data-filter]");
-    if (!chip) return;
-    state.filter = chip.dataset.filter;
-    renderFilters();
-    renderCards();
-  });
+  if (els.filterRail) {
+    els.filterRail.addEventListener("click", (event) => {
+      const chip = event.target.closest("[data-filter]");
+      if (!chip) return;
+      state.filter = chip.dataset.filter;
+      renderFilters();
+      renderCards();
+      syncCollectionUrl();
+    });
+  }
 
-  els.accordionPanels.addEventListener("click", (event) => {
-    const card = event.target.closest("[data-filter-jump]");
-    if (!card) return;
-    state.filter = card.dataset.filterJump;
-    state.query = "";
-    els.searchInput.value = "";
-    renderFilters();
-    renderCards();
-    document.querySelector("#collection").scrollIntoView({ behavior: "smooth" });
-  });
+  if (els.accordionPanels) {
+    els.accordionPanels.addEventListener("click", (event) => {
+      const card = event.target.closest("[data-filter-jump]");
+      if (!card) return;
+      jumpToFilter(card.dataset.filterJump);
+    });
+  }
 
   els.sortButtons.forEach((button) => {
     button.addEventListener("click", () => {
@@ -310,35 +332,41 @@ function bindEvents() {
     });
   });
 
-  els.featuredGrid.addEventListener("click", (event) => {
-    const card = event.target.closest("[data-code]");
-    if (card) openPost(card.dataset.code);
-  });
+  if (els.featuredGrid) {
+    els.featuredGrid.addEventListener("click", (event) => {
+      const card = event.target.closest("[data-code]");
+      if (card) openPost(card.dataset.code);
+    });
+  }
 
-  els.closeDialog.addEventListener("click", closeDialog);
-  els.nextImage.addEventListener("click", () => moveImage(1));
-  els.previousImage.addEventListener("click", () => moveImage(-1));
-  els.dialog.addEventListener("click", (event) => {
-    if (event.target === els.dialog) closeDialog();
-  });
-  els.dialog.addEventListener("close", () => {
-    document.body.classList.remove("dialog-open");
-  });
+  if (els.dialog) {
+    els.closeDialog?.addEventListener("click", closeDialog);
+    els.nextImage?.addEventListener("click", () => moveImage(1));
+    els.previousImage?.addEventListener("click", () => moveImage(-1));
+    els.dialog.addEventListener("click", (event) => {
+      if (event.target === els.dialog) closeDialog();
+    });
+    els.dialog.addEventListener("close", () => {
+      document.body.classList.remove("dialog-open");
+    });
+  }
 
   document.addEventListener("keydown", (event) => {
-    if (!state.activePost || !els.dialog.open) return;
+    if (!state.activePost || !els.dialog?.open) return;
     if (event.key === "ArrowRight") moveImage(1);
     if (event.key === "ArrowLeft") moveImage(-1);
   });
 }
 
 function attachCardListeners() {
+  if (!els.cardsGrid) return;
   els.cardsGrid.querySelectorAll("[data-code]").forEach((card) => {
     card.addEventListener("click", () => openPost(card.dataset.code));
   });
 }
 
 function openPost(code) {
+  if (!els.dialog) return;
   const post = state.posts.find((item) => item.code === code);
   if (!post) return;
 
@@ -351,7 +379,7 @@ function openPost(code) {
 }
 
 function closeDialog() {
-  els.dialog.close();
+  els.dialog?.close();
 }
 
 function renderDialog() {
@@ -394,7 +422,142 @@ function moveImage(direction) {
 }
 
 function updateHeader() {
-  els.siteHeader.classList.toggle("is-scrolled", window.scrollY > 80);
+  const forceSolidHeader = Boolean(document.querySelector(".collection-page"));
+  els.siteHeader?.classList.toggle("is-scrolled", forceSolidHeader || window.scrollY > 80);
+}
+
+function applyInitialViewParams() {
+  const params = new URLSearchParams(window.location.search);
+  const filter = params.get("filter");
+  const query = params.get("q");
+  if (filter) state.filter = filter;
+  if (query) state.query = query;
+}
+
+function syncCollectionUrl() {
+  if (!els.cardsGrid || !window.history?.replaceState) return;
+  const params = new URLSearchParams();
+  if (state.filter !== "All") params.set("filter", state.filter);
+  if (state.query.trim()) params.set("q", state.query.trim());
+  const nextUrl = params.toString() ? `collection.html?${params}` : "collection.html";
+  window.history.replaceState({}, "", nextUrl);
+}
+
+function jumpToFilter(filter) {
+  if (!els.cardsGrid) {
+    window.location.href = `collection.html?filter=${encodeURIComponent(filter)}`;
+    return;
+  }
+
+  state.filter = filter;
+  state.query = "";
+  if (els.searchInput) els.searchInput.value = "";
+  renderFilters();
+  renderCards();
+  syncCollectionUrl();
+  document.querySelector("#collection")?.scrollIntoView({ behavior: "smooth" });
+}
+
+function setupMusic() {
+  const button = els.musicToggle;
+  if (!button || backgroundAudio) return;
+
+  const src = button.dataset.audioSrc;
+  const label = button.querySelector("span");
+  if (!src) return;
+
+  backgroundAudio = new Audio(src);
+  backgroundAudio.loop = true;
+  backgroundAudio.preload = "auto";
+  backgroundAudio.volume = 0.42;
+  let firstInteractionArmed = false;
+
+  const setMissing = () => {
+    button.classList.add("is-missing");
+    button.setAttribute("aria-label", "Background music file has not been added");
+    button.title = "Background music file could not be loaded";
+    if (label) label.textContent = "Add BGM";
+  };
+
+  const setPlaying = () => {
+    button.classList.remove("is-blocked");
+    button.classList.add("is-playing");
+    button.setAttribute("aria-label", "Pause background music");
+    button.title = "Pause background music";
+    if (label) label.textContent = "Playing";
+    removeFirstInteractionStart();
+  };
+
+  const setPaused = () => {
+    button.classList.remove("is-playing");
+    button.setAttribute("aria-label", "Play background music");
+    button.title = "Play background music";
+    if (label) label.textContent = "BGM";
+  };
+
+  const setBlocked = () => {
+    button.classList.add("is-blocked");
+    button.setAttribute("aria-label", "Start background music");
+    button.title = "Browser blocked autoplay. Click once to start music.";
+    if (label) label.textContent = "Play BGM";
+    addFirstInteractionStart();
+  };
+
+  async function startPlayback({ quiet = false } = {}) {
+    if (button.classList.contains("is-missing")) return;
+    try {
+      await backgroundAudio.play();
+      setPlaying();
+    } catch (error) {
+      setBlocked();
+      if (!quiet) console.error(error);
+    }
+  }
+
+  function onFirstInteraction(event) {
+    if (button.contains(event.target)) return;
+    startPlayback({ quiet: true });
+  }
+
+  function addFirstInteractionStart() {
+    if (firstInteractionArmed) return;
+    firstInteractionArmed = true;
+    document.addEventListener("pointerdown", onFirstInteraction, true);
+    document.addEventListener("keydown", onFirstInteraction, true);
+    document.addEventListener("touchstart", onFirstInteraction, true);
+  }
+
+  function removeFirstInteractionStart() {
+    if (!firstInteractionArmed) return;
+    firstInteractionArmed = false;
+    document.removeEventListener("pointerdown", onFirstInteraction, true);
+    document.removeEventListener("keydown", onFirstInteraction, true);
+    document.removeEventListener("touchstart", onFirstInteraction, true);
+  }
+
+  fetch(src, { method: "HEAD", cache: "no-store" })
+    .then((response) => {
+      if (!response.ok) {
+        setMissing();
+        return;
+      }
+      setPaused();
+      if (button.dataset.autoplay === "true") {
+        startPlayback({ quiet: true });
+      }
+    })
+    .catch(setMissing);
+
+  button.addEventListener("click", async () => {
+    if (button.classList.contains("is-missing")) return;
+
+    if (backgroundAudio.paused) {
+      startPlayback();
+    } else {
+      backgroundAudio.pause();
+      setPaused();
+    }
+  });
 }
 
 function setupMotion() {
