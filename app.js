@@ -13,7 +13,9 @@ const els = {
   statImages: document.querySelector("#statImages"),
   statSigned: document.querySelector("#statSigned"),
   statClubs: document.querySelector("#statClubs"),
+  marqueeTrack: document.querySelector("#marqueeTrack"),
   featuredGrid: document.querySelector("#featuredGrid"),
+  accordionPanels: document.querySelector("#accordionPanels"),
   filterRail: document.querySelector("#filterRail"),
   cardsGrid: document.querySelector("#cardsGrid"),
   resultCount: document.querySelector("#resultCount"),
@@ -51,25 +53,40 @@ const curatedFilters = [
   "2025",
 ];
 
-const playerDisplayFixes = new Map([
-  ["DOebLzKAZrI", "Michael Owen"],
-  ["DOebE05AcI4", "Manu Kone"],
-  ["DOeauRiAWUU", "Joao Palhinha"],
-  ["DOeaIGegYEs", "Nemanja Vidic"],
-  ["DOeaAxVAWFn", "Diego Forlan"],
-  ["DK8nT_cRuTP", "Darwin Nunez"],
-  ["DKVQEKmSl70", "Desire Doue"],
-  ["DHSmtIAObiK", "Rafael Leao"],
-  ["DHSmL-bu1vL", "Ryan Giggs"],
-  ["DHM1K7Gxsbo", "Antoine Griezmann"],
-  ["DHM0y3ExaFJ", "Alexis Mac Allister"],
-  ["DGRzXUCRraH", "Andriy Shevchenko"],
-]);
-
-const locationDisplayFixes = new Map([
-  ["DGNKPgGOX6g", "NYC"],
-  ["DRhikp9EXXX", "LA"],
-  ["DOebLzKAZrI", "Hong Kong"],
+const metadataFixes = new Map([
+  ["DLVu84XSWyF", { player: "Alex Scott", teams: ["Bristol City"], dropTags: ["England"] }],
+  ["DGNKPgGOX6g", { player: "Zlatan Ibrahimovic", location: "NYC", teams: ["AC Milan"] }],
+  ["DRhikp9EXXX", { player: "Olivier Giroud", location: "LA", teams: ["AC Milan"] }],
+  ["DRgZxE-jLzd", { player: "Nico Paz", teams: ["Como"] }],
+  ["DOebLzKAZrI", { player: "Michael Owen", location: "Hong Kong", teams: ["Manchester United"] }],
+  ["DOebE05AcI4", { player: "Manu Kone", teams: ["Borussia Monchengladbach"], dropTags: ["Manchester United", "FC Augsburg"] }],
+  ["DOeauRiAWUU", { player: "Joao Palhinha", teams: ["Fulham"] }],
+  ["DOeaZZHgZO-", { player: "Rivaldo", teams: ["AC Milan"] }],
+  ["DOeaSTnAXRW", { player: "Cafu", teams: ["AC Milan"] }],
+  ["DOeaIGegYEs", { player: "Nemanja Vidic", teams: ["Manchester United"] }],
+  ["DOeaAxVAWFn", { player: "Diego Forlan", teams: ["Manchester United"] }],
+  ["DOeZs-LgfSA", { player: "Sandro Tonali", teams: ["AC Milan"] }],
+  ["DK8nT_cRuTP", { player: "Darwin Nunez", teams: ["Benfica"], dropTags: ["Liverpool"] }],
+  ["DK8nInPxC20", { player: "Raul Jimenez", teams: ["Mexico"], dropTags: ["Fulham"] }],
+  ["DK8m0H7xCyB", { player: "Giorgio Chiellini" }],
+  ["DKye5lCuXal", { player: "N'Golo Kante", teams: ["Chelsea"] }],
+  ["DKyehMGuHqS", { player: "Jude Bellingham", teams: ["Borussia Dortmund"] }],
+  ["DKVQEKmSl70", { player: "Desire Doue", teams: ["Stade Rennais"] }],
+  ["DHSnWAquK62", { player: "Rafael Varane", teams: ["Manchester United"] }],
+  ["DHSnIuGOZ1x", { player: "Kobbie Mainoo", teams: ["Manchester United"] }],
+  ["DHSm-McOGNW", { player: "Khvicha Kvaratskhelia", teams: ["Napoli"], dropTags: ["Stade Brestois"] }],
+  ["DHSmtIAObiK", { player: "Rafael Leao", teams: ["AC Milan"] }],
+  ["DHSmh3cu0qO", { player: "Marco Reus", teams: ["Borussia Dortmund"] }],
+  ["DHSmYv-uhEb", { player: "Michael Carrick", teams: ["Manchester United"], dropTags: ["Bristol City"] }],
+  ["DHSmTXAu9rh", { player: "Thiago Silva", teams: ["Chelsea"] }],
+  ["DHSmL-bu1vL", { player: "Ryan Giggs", teams: ["Manchester United"] }],
+  ["DHSmCyaOWj7", { player: "Pedri", teams: ["Barcelona"] }],
+  ["DHSj6wAu7eC", { player: "Erling Haaland", teams: ["Manchester City"] }],
+  ["DHM1K7Gxsbo", { player: "Antoine Griezmann", teams: ["Atletico Madrid"] }],
+  ["DHM0y3ExaFJ", { player: "Alexis Mac Allister", teams: ["Argentina"] }],
+  ["DHM0LMLRz21", { player: "Harry Kane", teams: ["Tottenham Hotspur"] }],
+  ["DHMwpwDSmvP", { player: "Virgil Van Dijk", teams: ["Liverpool"] }],
+  ["DGRzXUCRraH", { player: "Andriy Shevchenko", teams: ["AC Milan"] }],
 ]);
 
 init();
@@ -81,11 +98,14 @@ async function init() {
     state.posts = collection.posts.map(enhancePost);
     state.filtered = [...state.posts];
     renderStats(collection.source);
+    renderMarquee();
     renderFilters();
     renderFeatured();
+    renderAccordions();
     renderCards();
     bindEvents();
     updateHeader();
+    setupMotion();
     refreshIcons();
   } catch (error) {
     els.cardsGrid.innerHTML = `<div class="empty-state">Collection data could not be loaded.</div>`;
@@ -94,22 +114,28 @@ async function init() {
 }
 
 function enhancePost(post) {
-  const player = playerDisplayFixes.get(post.code) || post.player;
-  const cleanPostLocation = locationDisplayFixes.get(post.code) || cleanLocation(post.location);
+  const fix = metadataFixes.get(post.code) || {};
+  const player = fix.player || post.player;
+  const cleanPostLocation = fix.location || cleanLocation(post.location);
+  const dropTags = new Set((fix.dropTags || []).map((tag) => tag.toLowerCase()));
+  const originalTags = (post.tags || []).filter((tag) => !dropTags.has(tag.toLowerCase()));
+  const fixedTags = unique([...(fix.teams || []), ...originalTags]);
   const searchable = [
     post.title,
     player,
     post.caption,
     cleanPostLocation,
     post.year,
-    ...(post.tags || []),
+    ...fixedTags,
   ].join(" ").toLowerCase();
 
   return {
     ...post,
     player,
+    tags: fixedTags,
+    primaryTeam: fix.teams?.[0] || "",
     cleanLocation: cleanPostLocation,
-    displayTags: buildDisplayTags(post),
+    displayTags: buildDisplayTags({ ...post, tags: fixedTags }),
     searchable,
   };
 }
@@ -123,6 +149,19 @@ function renderStats(source) {
   els.statImages.textContent = mediaTotal;
   els.statSigned.textContent = signedTotal;
   els.statClubs.textContent = teams.size;
+}
+
+function renderMarquee() {
+  const selected = state.posts
+    .filter((post) => post.media[0]?.src)
+    .slice(0, 16);
+  const items = [...selected, ...selected].map((post) => `
+    <span class="marquee-item">
+      <img src="${escapeHtml(post.media[0].src)}" alt="">
+      ${escapeHtml(post.player)}
+    </span>
+  `);
+  els.marqueeTrack.innerHTML = items.join("");
 }
 
 function renderFilters() {
@@ -141,24 +180,63 @@ function renderFilters() {
 }
 
 function renderFeatured() {
-  const wanted = ["DGNKPgGOX6g", "DLVu84XSWyF", "DKye5lCuXal"];
+  const wanted = ["DGNKPgGOX6g", "DLVu84XSWyF", "DKye5lCuXal", "DKyehMGuHqS", "DGRzXUCRraH", "DHSj6wAu7eC"];
   const featured = wanted
     .map((code) => state.posts.find((post) => post.code === code))
     .filter(Boolean);
 
-  const fallback = state.posts.filter((post) => !featured.includes(post)).slice(0, 3 - featured.length);
-  const items = [...featured, ...fallback].slice(0, 3);
-
-  els.featuredGrid.innerHTML = items.map((post) => `
-    <button class="featured-card" type="button" data-code="${escapeHtml(post.code)}">
+  els.featuredGrid.innerHTML = featured.map((post) => `
+    <button class="featured-card motion-image" type="button" data-code="${escapeHtml(post.code)}">
       <img src="${escapeHtml(post.media[0]?.src || "")}" alt="${escapeHtml(post.player)} shirt">
       <span class="featured-overlay">
-        <span class="eyebrow">${escapeHtml(post.displayTags[0] || "Collection")}</span>
+        <span class="quiet-label">${escapeHtml(post.displayTags[0] || "Collection")}</span>
         <h3>${escapeHtml(post.player)}</h3>
         <p>${escapeHtml(cardMeta(post))}</p>
       </span>
     </button>
   `).join("");
+}
+
+function renderAccordions() {
+  const groups = [
+    {
+      title: "Signed icons",
+      filter: "Signed",
+      code: "DGNKPgGOX6g",
+      copy: "Autographs, dedication notes, and the exact place the memory happened.",
+    },
+    {
+      title: "Match worn",
+      filter: "Match worn",
+      code: "DLVu84XSWyF",
+      copy: "Pieces that carry a fixture, a pitch, and a trace of the match.",
+    },
+    {
+      title: "Milan wall",
+      filter: "AC Milan",
+      code: "DGRzXUCRraH",
+      copy: "A red-and-black shelf for Zlatan, Giroud, Rivaldo, Cafu, Tonali, and Shevchenko.",
+    },
+    {
+      title: "Premier League",
+      filter: "Manchester United",
+      code: "DOebLzKAZrI",
+      copy: "Names gathered across Manchester, London, Liverpool, and beyond.",
+    },
+  ];
+
+  els.accordionPanels.innerHTML = groups.map((group) => {
+    const post = state.posts.find((item) => item.code === group.code) || state.posts[0];
+    return `
+      <button class="accordion-card motion-image" type="button" data-filter-jump="${escapeHtml(group.filter)}">
+        <img src="${escapeHtml(post.media[0]?.src || "")}" alt="${escapeHtml(group.title)}">
+        <span class="accordion-copy">
+          <h3>${escapeHtml(group.title)}</h3>
+          <p>${escapeHtml(group.copy)}</p>
+        </span>
+      </button>
+    `;
+  }).join("");
 }
 
 function renderCards() {
@@ -176,7 +254,7 @@ function renderCards() {
   }
 
   els.cardsGrid.innerHTML = state.filtered.map((post) => `
-    <button class="shirt-card" type="button" data-code="${escapeHtml(post.code)}">
+    <button class="shirt-card motion-image" type="button" data-code="${escapeHtml(post.code)}">
       <span class="card-image">
         <img src="${escapeHtml(post.media[0]?.src || "")}" alt="${escapeHtml(post.player)} shirt" loading="lazy">
       </span>
@@ -193,6 +271,7 @@ function renderCards() {
   `).join("");
 
   attachCardListeners();
+  setupMotion();
   refreshIcons();
 }
 
@@ -210,6 +289,17 @@ function bindEvents() {
     state.filter = chip.dataset.filter;
     renderFilters();
     renderCards();
+  });
+
+  els.accordionPanels.addEventListener("click", (event) => {
+    const card = event.target.closest("[data-filter-jump]");
+    if (!card) return;
+    state.filter = card.dataset.filterJump;
+    state.query = "";
+    els.searchInput.value = "";
+    renderFilters();
+    renderCards();
+    document.querySelector("#collection").scrollIntoView({ behavior: "smooth" });
   });
 
   els.sortButtons.forEach((button) => {
@@ -240,10 +330,6 @@ function bindEvents() {
     if (event.key === "ArrowRight") moveImage(1);
     if (event.key === "ArrowLeft") moveImage(-1);
   });
-}
-
-function updateHeader() {
-  els.siteHeader.classList.toggle("is-scrolled", window.scrollY > 120);
 }
 
 function attachCardListeners() {
@@ -307,6 +393,35 @@ function moveImage(direction) {
   refreshIcons();
 }
 
+function updateHeader() {
+  els.siteHeader.classList.toggle("is-scrolled", window.scrollY > 80);
+}
+
+function setupMotion() {
+  if (!window.gsap || !window.ScrollTrigger) return;
+  window.gsap.registerPlugin(window.ScrollTrigger);
+
+  window.gsap.utils.toArray(".motion-image").forEach((item) => {
+    if (item.dataset.motionReady) return;
+    item.dataset.motionReady = "true";
+    window.gsap.fromTo(item, {
+      opacity: 0.72,
+      scale: 0.94,
+    }, {
+      opacity: 1,
+      scale: 1,
+      ease: "power2.out",
+      scrollTrigger: {
+        trigger: item,
+        start: "top 88%",
+        end: "bottom 24%",
+        scrub: true,
+      },
+    });
+  });
+
+}
+
 function sortPosts(a, b) {
   if (state.sort === "player") return a.player.localeCompare(b.player);
   if (state.sort === "photos") return b.media.length - a.media.length;
@@ -320,12 +435,21 @@ function matchesFilter(post, filter) {
 
 function cardMeta(post) {
   const parts = [];
-  const team = post.displayTags.find((tag) => isTeamTag(tag));
+  const team = post.primaryTeam || post.displayTags.find((tag) => isTeamTag(tag));
   if (team) parts.push(team);
-  if (post.cleanLocation) parts.push(post.cleanLocation);
+  if (post.cleanLocation && !isLocationDuplicate(post.cleanLocation, team)) {
+    parts.push(post.cleanLocation);
+  }
   const type = post.displayTags.find((tag) => ["Signed", "Match worn", "Squad signed", "Player issue", "Special", "Original"].includes(tag));
   if (type) parts.push(type);
   return parts.join(" | ") || post.title;
+}
+
+function isLocationDuplicate(location, team) {
+  if (!location || !team) return false;
+  const cleanLocationValue = normalizeLabel(location);
+  const cleanTeamValue = normalizeLabel(team);
+  return cleanLocationValue === cleanTeamValue || cleanTeamValue.includes(cleanLocationValue);
 }
 
 function buildDisplayTags(post) {
@@ -346,6 +470,7 @@ function isTeamTag(tag) {
     "Borussia Dortmund",
     "Chelsea",
     "Liverpool",
+    "Manchester City",
     "Tottenham Hotspur",
     "Atletico Madrid",
     "Barcelona",
@@ -390,6 +515,10 @@ function formatDate(date) {
 
 function unique(values) {
   return [...new Set(values.filter(Boolean))];
+}
+
+function normalizeLabel(value) {
+  return String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
 }
 
 function escapeHtml(value) {
